@@ -1,0 +1,175 @@
+.cplc-hidden {
+  display: none !important;
+}
+
+/* Theme bridge (uses ChatGPT CSS vars with fallbacks) */
+:root {
+  --cplc-bg-primary: var(--bg-primary, #212121);
+  --cplc-bg-secondary: var(--bg-secondary, #303030);
+  --cplc-bg-tertiary: var(--bg-tertiary, #424242);
+  --cplc-bg-elev-1: var(--bg-elevated-primary, #303030);
+  --cplc-bg-elev-2: var(--bg-elevated-secondary, #181818);
+  --cplc-bg-scrim: var(--bg-scrim, #0d0d0d80);
+
+  --cplc-border: var(--border-default, #ffffff26);
+  --cplc-border-light: var(--border-light, #ffffff0d);
+  --cplc-border-heavy: var(--border-heavy, #fff3);
+
+  --cplc-text: var(--text-primary, #fff);
+  --cplc-text-2: var(--text-secondary, #f3f3f3);
+  --cplc-text-3: var(--text-tertiary, #afafaf);
+
+  --cplc-radius: 12px;
+  --cplc-btn-radius: 10px;
+
+  --cplc-btn-size: 32px;
+  --cplc-gap: 8px;
+}
+
+/* Icon (SVG as mask, colored via currentColor) */
+.cplc-icon {
+  width: 16px;
+  height: 16px;
+  display: inline-block;
+  background: currentColor;
+  -webkit-mask-repeat: no-repeat;
+  -webkit-mask-position: center;
+  -webkit-mask-size: contain;
+  mask-repeat: no-repeat;
+  mask-position: center;
+  mask-size: contain;
+  flex: 0 0 auto;
+}
+
+/* Toolbar */
+#cplc-toolbar {
+  position: fixed;
+  top: 60px;
+  right: 25px;
+  z-index: 999999;
+
+  background: var(--cplc-bg-elev-1);
+  color: var(--cplc-text);
+
+  border-radius: 25px;
+  padding: 10px;
+
+  font: 12px/1.2 system-ui, -apple-system, Segoe UI, Roboto, sans-serif;
+
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+
+  user-select: none;
+}
+
+/* Message counter */
+.cplc-count-pill {
+  height: 36px;
+  width: 36px;
+
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+
+  font-variant-numeric: tabular-nums;
+  color: var(--cplc-text-2);
+}
+
+/* Button stack */
+#cplc-toolbar .cplc-controls {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  align-items: center;
+}
+
+/* Settings group (+/-) */
+.cplc-settings-group {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  align-items: center;
+}
+
+/* Divider between settings and main controls */
+.cplc-divider {
+  width: 24px;
+  height: 1px;
+  background: var(--cplc-border);
+  border-radius: 1px;
+}
+
+.cplc-btn {
+  appearance: none;
+  width: 36px;
+  height: 36px;
+  padding: 0;
+  border: none;
+
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+
+  border-radius: 100%;
+  background: var(--cplc-bg-tertiary);
+  color: var(--cplc-text);
+
+  transition: opacity 0.3s;
+
+  cursor: pointer;
+}
+
+.cplc-btn:hover {
+  opacity: 0.75;
+}
+
+.cplc-btn-active {
+  background: color-mix(in srgb, var(--cplc-bg-scrim) 0%, #fff);
+  color: #000;
+  border-color: color-mix(in srgb, var(--cplc-border-heavy) 40%, #fff);
+}
+
+/* User message collapse */
+.cplc-user-collapsed {
+  max-height: 220px;
+  overflow: hidden;
+}
+
+/* Fade overlay for collapsed messages */
+.cplc-user-fade {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+
+  height: 84px;
+  pointer-events: none;
+
+  background: linear-gradient(to bottom,
+      rgba(0, 0, 0, 0),
+      color-mix(in srgb, var(--cplc-bg-primary) 85%, transparent));
+}
+
+/* Collapse toggle button */
+.cplc-toggle-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+
+  height: 34px;
+  padding: 0 12px;
+  margin-left: 8px;
+
+  font: 12px/1 system-ui, -apple-system, Segoe UI, Roboto, sans-serif;
+  color: var(--cplc-text);
+
+  border-radius: 0.5rem;
+  backdrop-filter: blur(8px);
+
+  cursor: pointer;
+}
+
+.cplc-toggle-btn:hover {
+  background: color-mix(in srgb, var(--cplc-bg-secondary) 85%, #000);
+}

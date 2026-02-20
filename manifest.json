@@ -1,0 +1,56 @@
+{
+  "manifest_version": 3,
+  "name": "ChatGPT Performance Long Chats",
+  "version": "1.0.0",
+  "description": "Fix ChatGPT lag in long chats. Auto-collapses old messages and reveals them on scroll up. Improve performance instantly.",
+  "permissions": [
+    "storage"
+  ],
+  "host_permissions": [
+    "https://chatgpt.com/*"
+  ],
+  "web_accessible_resources": [
+    {
+      "resources": [
+        "icons/*.svg"
+      ],
+      "matches": [
+        "https://chatgpt.com/*"
+      ]
+    }
+  ],
+  "content_scripts": [
+    {
+      "matches": [
+        "https://chatgpt.com/*"
+      ],
+      "js": [
+        "core.js",
+        "dom.js",
+        "visibility.js",
+        "user-collapse.js",
+        "icons.js",
+        "toolbar.js",
+        "auto-scroll.js",
+        "content-script.js"
+      ],
+      "css": [
+        "content-style.css"
+      ],
+      "run_at": "document_idle"
+    }
+  ],
+  "icons": {
+    "16": "icons/icon16.png",
+    "32": "icons/icon32.png",
+    "48": "icons/icon48.png",
+    "128": "icons/icon128.png"
+  },
+  "action": {
+    "default_icon": {
+      "16": "icons/icon16.png",
+      "32": "icons/icon32.png",
+      "48": "icons/icon48.png"
+    }
+  }
+}

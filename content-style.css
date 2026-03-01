@@ -46,7 +46,7 @@
   position: fixed;
   top: 60px;
   right: 25px;
-  z-index: 999999;
+  z-index: 1;
 
   background: var(--cplc-bg-elev-1);
   color: var(--cplc-text);

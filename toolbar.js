@@ -13,7 +13,8 @@
     function update() {
         const { ui, settings, expandedVisible } = CPLC.state;
 
-        if (ui.countEl) ui.countEl.textContent = `${expandedVisible}/${settings.baseVisible}`;
+        const visibleCount = CPLC.dom.getTurnElements().filter(t => !t.classList.contains("cplc-hidden")).length;
+        if (ui.countEl) ui.countEl.textContent = `${visibleCount}/${settings.baseVisible}`;
 
         if (ui.settingsBtn) ui.settingsBtn.classList.toggle("cplc-btn-active", settings.settingsOpen);
         if (ui.settingsGroup) ui.settingsGroup.style.display = settings.settingsOpen ? "" : "none";

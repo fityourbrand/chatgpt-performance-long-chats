@@ -20,6 +20,24 @@
         return btn;
     }
 
+    function getTurnRoot(el) {
+        return (
+            el.closest('section[data-turn-id], article[data-turn-id]') ||
+            el.closest('[data-testid^="conversation-turn-"]') ||
+            el.closest('[data-turn-id]')
+        );
+    }
+
+    function getActionBar(turnRoot) {
+        if (!turnRoot) return null;
+
+        return (
+            turnRoot.querySelector('[aria-label="Your message actions"]') ||
+            turnRoot.querySelector('.z-0.flex.justify-end > div[role="group"]') ||
+            turnRoot.querySelector('.z-0.flex.justify-end > div')
+        );
+    }
+
     function ensureFadeEl(bubble) {
         let fade = bubble.querySelector(":scope > .cplc-user-fade");
         if (!fade) {
@@ -43,26 +61,29 @@
         }
     }
 
+    function cleanupBubble(bubble, actionBar = null) {
+        const content = bubble.querySelector(".whitespace-pre-wrap");
+        if (content) {
+            content.classList.remove("cplc-user-collapsed");
+        }
+
+        const fade = bubble.querySelector(":scope > .cplc-user-fade");
+        if (fade) fade.remove();
+
+        const resolvedActionBar = actionBar || getActionBar(getTurnRoot(bubble));
+        if (resolvedActionBar && bubble.dataset.cplcButtonId) {
+            const btn = resolvedActionBar.querySelector(`[data-cplc-id="${bubble.dataset.cplcButtonId}"]`);
+            if (btn) btn.remove();
+        }
+
+        delete bubble.dataset.cplcSetup;
+        delete bubble.dataset.cplcCollapsed;
+        delete bubble.dataset.cplcButtonId;
+    }
+
     function removeAll() {
         document.querySelectorAll(".user-message-bubble-color[data-cplc-setup]").forEach((bubble) => {
-            const content = bubble.querySelector(".whitespace-pre-wrap");
-            if (content) {
-                content.classList.remove("cplc-user-collapsed");
-            }
-
-            const fade = bubble.querySelector(":scope > .cplc-user-fade");
-            if (fade) fade.remove();
-
-            const article = bubble.closest("article");
-            const actionBar = article ? article.querySelector(".z-0.flex.justify-end > div") : null;
-            if (actionBar && bubble.dataset.cplcButtonId) {
-                const btn = actionBar.querySelector(`[data-cplc-id="${bubble.dataset.cplcButtonId}"]`);
-                if (btn) btn.remove();
-            }
-
-            delete bubble.dataset.cplcSetup;
-            delete bubble.dataset.cplcCollapsed;
-            delete bubble.dataset.cplcButtonId;
+            cleanupBubble(bubble);
         });
     }
 
@@ -78,23 +99,17 @@
             const content = bubble.querySelector(".whitespace-pre-wrap");
             if (!content) return;
 
-            const article = bubble.closest("article");
-            const actionBar = article ? article.querySelector(".z-0.flex.justify-end > div") : null;
+            const turnRoot = getTurnRoot(bubble);
+            const actionBar = getActionBar(turnRoot);
 
             const tallEnough = content.scrollHeight >= CPLC.COLLAPSE_MIN_SCROLL_HEIGHT;
 
             if (!tallEnough) {
-                // Clean up stale button if it exists
-                if (actionBar && bubble.dataset.cplcButtonId) {
-                    const existing = actionBar.querySelector(`[data-cplc-id="${bubble.dataset.cplcButtonId}"]`);
-                    if (existing) existing.remove();
-                    delete bubble.dataset.cplcButtonId;
-                    delete bubble.dataset.cplcSetup;
-                }
+                cleanupBubble(bubble, actionBar);
                 return;
             }
 
-            // Re-validate existing setup (button may have been removed by ChatGPT's DOM updates)
+            // Re-validate existing setup in case ChatGPT re-rendered the action bar
             if (bubble.dataset.cplcSetup && actionBar) {
                 const btnId = bubble.dataset.cplcButtonId;
                 const btn = btnId ? actionBar.querySelector(`[data-cplc-id="${btnId}"]`) : null;
@@ -144,7 +159,9 @@
             }
 
             const fade = bubble.querySelector(":scope > .cplc-user-fade");
-            if (fade && bubble.dataset.cplcCollapsed === "1") fade.style.display = "";
+            if (fade && bubble.dataset.cplcCollapsed === "1") {
+                fade.style.display = "";
+            }
         });
     }
 

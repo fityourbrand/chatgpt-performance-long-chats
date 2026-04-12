@@ -2,6 +2,7 @@
     const CPLC = window.CPLC;
 
     function runAutoScroll(directionHint) {
+        if (CPLC.isUserTyping && CPLC.isUserTyping()) return;
         if (!CPLC.state.settings.autoScroll) return;
 
         const sc = CPLC.scroll.getScrollContainer();
@@ -22,6 +23,8 @@
     }
 
     function onAnyScroll(e) {
+        if (CPLC.isUserTyping && CPLC.isUserTyping()) return;
+
         CPLC.scroll.setScrollContainerFromEventTarget(e?.target);
 
         if (CPLC.state.ticking) return;
@@ -34,6 +37,7 @@
     }
 
     function onWheel(e) {
+        if (CPLC.isUserTyping && CPLC.isUserTyping()) return;
         if (!CPLC.state.settings.autoScroll) return;
 
         CPLC.scroll.setScrollContainerFromEventTarget(e?.target);

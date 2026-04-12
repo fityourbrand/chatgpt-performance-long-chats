@@ -4,20 +4,115 @@
   let lastUrl = location.href;
   let lastTurnCount = 0;
 
-  let refreshQueued = false;
-  let refreshNeedsReset = false;
-
   let pendingScrollToBottom = false;
   let pendingScrollDeadline = 0;
 
+  let lastTypingAt = 0;
+  let isCurrentlyTyping = false;
+  let typingReleaseTimer = null;
+  let postTypingRefreshTimer = null;
+
+  let initialLoadTimers = [];
+  let turnCountRefreshTimers = [];
+
+  function isTextEditingElement(el) {
+    if (!el || !(el instanceof Element)) return false;
+
+    if (el instanceof HTMLTextAreaElement) return true;
+
+    if (el instanceof HTMLInputElement) {
+      const type = (el.type || "").toLowerCase();
+      return !type || type === "text" || type === "search";
+    }
+
+    if (el.getAttribute("contenteditable") === "true") return true;
+    if (el.closest('[contenteditable="true"]')) return true;
+
+    return false;
+  }
+
+  function isUserTyping() {
+    const recentlyTyped = Date.now() - lastTypingAt < 800;
+    return isCurrentlyTyping || recentlyTyped;
+  }
+
+  CPLC.isUserTyping = isUserTyping;
+
+  function getContextOverflowBuffer() {
+    switch (CPLC.state.settings.loadMode) {
+      case "fast":
+        return 20;
+      case "history":
+        return 60;
+      case "snail":
+        return 120;
+      case "off":
+        return Infinity;
+      case "balanced":
+      default:
+        return 30;
+    }
+  }
+
+  function updateContextOverflowState() {
+    const turns = CPLC.dom.getTurnElements();
+    const currentCount = turns.length;
+    const mode = CPLC.state.settings.loadMode;
+
+    if (mode === "off") {
+      CPLC.state.hasContextOverflow = false;
+      return;
+    }
+
+    if (!CPLC.state.contextBaselineCount) {
+      if (currentCount >= CPLC.state.settings.loadLimit) {
+        CPLC.state.contextBaselineCount = currentCount;
+      }
+
+      CPLC.state.hasContextOverflow = false;
+      return;
+    }
+
+    const buffer = getContextOverflowBuffer();
+    CPLC.state.hasContextOverflow = currentCount > CPLC.state.contextBaselineCount + buffer;
+  }
+
+  function schedulePostTypingRefresh() {
+    if (postTypingRefreshTimer) clearTimeout(postTypingRefreshTimer);
+
+    postTypingRefreshTimer = setTimeout(() => {
+      postTypingRefreshTimer = null;
+
+      if (isUserTyping()) return;
+
+      runRefresh(false);
+    }, 250);
+  }
+
+  function markTyping() {
+    lastTypingAt = Date.now();
+    isCurrentlyTyping = true;
+
+    if (typingReleaseTimer) clearTimeout(typingReleaseTimer);
+    typingReleaseTimer = setTimeout(() => {
+      isCurrentlyTyping = false;
+      schedulePostTypingRefresh();
+    }, 150);
+  }
+
   function resetConversationState() {
-    CPLC.state.expandedVisible = CPLC.state.settings.baseVisible;
+    CPLC.state.expandedVisible = CPLC.state.settings.initialVisible;
+    CPLC.state.hasContextOverflow = false;
+    CPLC.state.contextBaselineCount = 0;
 
     CPLC.state.currentScrollContainer = CPLC.scroll.findScrollContainer();
     CPLC.state.lastScrollTop =
       CPLC.state.currentScrollContainer?.scrollTop || 0;
 
     lastTurnCount = CPLC.dom.getTurnElements().length;
+
+    CPLC.state.reloadHintShown = false;
+    CPLC.toolbar?.hideTooltip?.(true);
   }
 
   function hookComposerSubmit() {
@@ -33,6 +128,29 @@
 
         pendingScrollToBottom = true;
         pendingScrollDeadline = Date.now() + 4000;
+
+        scheduleTurnCountRefreshes();
+      },
+      true
+    );
+  }
+
+  function hookTypingSignals() {
+    if (hookTypingSignals.done) return;
+    hookTypingSignals.done = true;
+
+    document.addEventListener(
+      "input",
+      (e) => {
+        if (isTextEditingElement(e.target)) markTyping();
+      },
+      true
+    );
+
+    document.addEventListener(
+      "keydown",
+      (e) => {
+        if (isTextEditingElement(e.target)) markTyping();
       },
       true
     );
@@ -40,6 +158,7 @@
 
   function scrollToBottomOnceIfPending() {
     if (!pendingScrollToBottom) return;
+
     if (pendingScrollDeadline && Date.now() > pendingScrollDeadline) {
       pendingScrollToBottom = false;
       pendingScrollDeadline = 0;
@@ -55,7 +174,9 @@
     pendingScrollDeadline = 0;
   }
 
-  function doRefresh(reset = false) {
+  function runRefresh(reset = false) {
+    if (isUserTyping()) return;
+
     if (reset) resetConversationState();
 
     if (
@@ -67,45 +188,65 @@
         CPLC.state.currentScrollContainer?.scrollTop || 0;
     }
 
+    const turns = CPLC.dom.getTurnElements();
+    const desiredVisible = Math.min(
+      turns.length,
+      Math.max(CPLC.state.settings.initialVisible, CPLC.state.expandedVisible)
+    );
+
+    CPLC.state.expandedVisible = desiredVisible;
+
     CPLC.visibility.applyVisibility();
     CPLC.userCollapse.enhance();
+
+    updateContextOverflowState();
+
     CPLC.toolbar.ensure();
     CPLC.toolbar.update();
 
-    // Late passes for async/streaming layout (handles long loads too)
-    setTimeout(() => {
-      CPLC.visibility.applyVisibility();
-      CPLC.userCollapse.enhance();
-      CPLC.toolbar.update();
-    }, 250);
-
-    setTimeout(() => {
-      CPLC.visibility.applyVisibility();
-      CPLC.userCollapse.enhance();
-      CPLC.toolbar.update();
-    }, 1000);
-
-    setTimeout(() => {
-      CPLC.visibility.applyVisibility();
-      CPLC.userCollapse.enhance();
-      CPLC.toolbar.update();
-    }, 3000);
-
-    // Only scroll if user submitted
     scrollToBottomOnceIfPending();
   }
 
-  function queueRefresh(reset = false) {
-    refreshNeedsReset = refreshNeedsReset || reset;
-    if (refreshQueued) return;
-    refreshQueued = true;
+  function clearInitialLoadTimers() {
+    for (const id of initialLoadTimers) clearTimeout(id);
+    initialLoadTimers = [];
+  }
 
-    requestAnimationFrame(() => {
-      refreshQueued = false;
-      const r = refreshNeedsReset;
-      refreshNeedsReset = false;
-      doRefresh(r);
-    });
+  function clearTurnCountRefreshTimers() {
+    for (const id of turnCountRefreshTimers) clearTimeout(id);
+    turnCountRefreshTimers = [];
+  }
+
+  function scheduleInitialLoadRefreshes() {
+    clearInitialLoadTimers();
+
+    const delays = [0, 250, 1000, 3000, 6000];
+
+    for (const delay of delays) {
+      const id = setTimeout(() => {
+        if (!isUserTyping()) {
+          runRefresh(delay === 0);
+        }
+      }, delay);
+
+      initialLoadTimers.push(id);
+    }
+  }
+
+  function scheduleTurnCountRefreshes() {
+    clearTurnCountRefreshTimers();
+
+    const delays = [0, 250, 1000];
+
+    for (const delay of delays) {
+      const id = setTimeout(() => {
+        if (!isUserTyping()) {
+          runRefresh(false);
+        }
+      }, delay);
+
+      turnCountRefreshTimers.push(id);
+    }
   }
 
   function observeConversation() {
@@ -117,36 +258,30 @@
       const currentUrl = location.href;
       const urlChanged = currentUrl !== lastUrl;
 
-      const turns = CPLC.dom.getTurnElements();
-      const currentTurnCount = turns.length;
-      const turnCountChanged = currentTurnCount !== lastTurnCount;
-
       if (urlChanged) {
         lastUrl = currentUrl;
-
-        // New chat load can be delayed: reset now, then multi-pass refresh will catch the eventual DOM.
         lastTurnCount = 0;
         pendingScrollToBottom = false;
         pendingScrollDeadline = 0;
 
-        queueRefresh(true);
+        scheduleInitialLoadRefreshes();
         return;
       }
 
-      if (turnCountChanged) {
+      if (isUserTyping()) return;
+
+      const turns = CPLC.dom.getTurnElements();
+      const currentTurnCount = turns.length;
+
+      if (currentTurnCount !== lastTurnCount) {
         lastTurnCount = currentTurnCount;
-        queueRefresh(false);
-        return;
+        scheduleTurnCountRefreshes();
       }
-
-      // Streaming / edits inside existing turns
-      queueRefresh(false);
     });
 
     CPLC.state.observer.observe(root, {
       childList: true,
-      subtree: true,
-      characterData: true
+      subtree: true
     });
   }
 
@@ -154,13 +289,14 @@
     await CPLC.storage.load();
 
     hookComposerSubmit();
+    hookTypingSignals();
 
     CPLC.toolbar.ensure();
     resetConversationState();
 
     CPLC.autoScroll.ensureHooks();
 
-    doRefresh(false);
+    scheduleInitialLoadRefreshes();
     observeConversation();
   }
 

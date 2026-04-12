@@ -4,7 +4,9 @@
     CPLC.STORAGE_KEY = "cplc_settings";
 
     CPLC.DEFAULTS = {
-        baseVisible: 5,
+        loadMode: "balanced",
+        loadLimit: 20,
+        initialVisible: 5,
         autoScroll: true,
         collapseEnabled: true,
         settingsOpen: false,
@@ -18,23 +20,33 @@
 
     CPLC.state = {
         settings: { ...CPLC.DEFAULTS },
-        expandedVisible: CPLC.DEFAULTS.baseVisible,
+        expandedVisible: CPLC.DEFAULTS.initialVisible,
+        hasContextOverflow: false,
+        contextBaselineCount: 0,
+        reloadHintShown: false,
         lastScrollTop: 0,
         ticking: false,
         observer: null,
         currentScrollContainer: null,
         hooksAttached: false,
         ui: {
-            toolbarEl: null,
-            countEl: null,
             settingsBtn: null,
             settingsGroup: null,
+            visiblePlusBtn: null,
+            visibleMinusBtn: null,
+            toolbarEl: null,
+            countEl: null,
             collapseBtn: null,
             autoBtn: null,
             upBtn: null,
             downBtn: null,
-            minusBtn: null,
-            plusBtn: null
+            modeBtn: null,
+            reloadBtn: null,
+            stickyTooltipTarget: null,
+            tooltipEl: null,
+            tooltipTitleEl: null,
+            tooltipSubEl: null,
+            tooltipTarget: null,
         }
     };
 
@@ -50,7 +62,7 @@
                 CPLC.state.settings = { ...CPLC.state.settings, ...data[CPLC.STORAGE_KEY] };
             }
 
-            CPLC.state.expandedVisible = CPLC.state.settings.baseVisible;
+            CPLC.state.expandedVisible = CPLC.state.settings.initialVisible;
         },
 
         save: async () => {

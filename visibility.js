@@ -23,6 +23,8 @@
 
     function applyVisibility() {
         const turns = CPLC.dom.getTurnElements();
+        if (!turns.length) return;
+
         const keep = Math.max(1, Math.min(CPLC.state.expandedVisible, turns.length));
         const cutoff = Math.max(0, turns.length - keep);
 
@@ -58,10 +60,10 @@
     }
 
     function hideOne() {
-        if (CPLC.state.expandedVisible <= CPLC.state.settings.baseVisible) return;
+        if (CPLC.state.expandedVisible <= CPLC.state.settings.initialVisible) return;
 
         CPLC.state.expandedVisible = Math.max(
-            CPLC.state.settings.baseVisible,
+            CPLC.state.settings.initialVisible,
             CPLC.state.expandedVisible - CPLC.state.settings.step
         );
 

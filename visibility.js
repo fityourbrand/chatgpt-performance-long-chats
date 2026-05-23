@@ -1,82 +1,82 @@
-(() => {
-    const CPLC = window.CPLC;
+;(() => {
+  const CPLC = window.CPLC
 
-    function preserveViewport(callback) {
-        const sc = CPLC.scroll.getScrollContainer();
+  function preserveViewport(callback) {
+    const sc = CPLC.scroll.getScrollContainer()
 
-        const anchor = CPLC.dom.getFirstVisibleTurn();
-        if (!anchor) {
-            callback();
-            return;
-        }
-
-        const beforeTop = anchor.getBoundingClientRect().top;
-
-        callback();
-
-        requestAnimationFrame(() => {
-            const afterTop = anchor.getBoundingClientRect().top;
-            const delta = afterTop - beforeTop;
-            sc.scrollTop += delta;
-        });
+    const anchor = CPLC.dom.getFirstVisibleTurn()
+    if (!anchor) {
+      callback()
+      return
     }
 
-    function applyVisibility() {
-        const turns = CPLC.dom.getTurnElements();
-        if (!turns.length) return;
+    const beforeTop = anchor.getBoundingClientRect().top
 
-        const keep = Math.max(1, Math.min(CPLC.state.expandedVisible, turns.length));
-        const cutoff = Math.max(0, turns.length - keep);
+    callback()
 
-        for (let i = 0; i < turns.length; i++) {
-            if (i < cutoff) turns[i].classList.add("cplc-hidden");
-            else turns[i].classList.remove("cplc-hidden");
-        }
+    requestAnimationFrame(() => {
+      const afterTop = anchor.getBoundingClientRect().top
+      const delta = afterTop - beforeTop
+      sc.scrollTop += delta
+    })
+  }
+
+  function applyVisibility() {
+    const turns = CPLC.dom.getTurnElements()
+    if (!turns.length) return
+
+    const keep = Math.max(1, Math.min(CPLC.state.expandedVisible, turns.length))
+    const cutoff = Math.max(0, turns.length - keep)
+
+    for (let i = 0; i < turns.length; i++) {
+      if (i < cutoff) turns[i].classList.add('cplc-hidden')
+      else turns[i].classList.remove('cplc-hidden')
+    }
+  }
+
+  function revealOne() {
+    if (revealOne.lock) return
+    revealOne.lock = true
+
+    const turns = CPLC.dom.getTurnElements()
+    if (CPLC.state.expandedVisible >= turns.length) {
+      revealOne.lock = false
+      return
     }
 
-    function revealOne() {
-        if (revealOne.lock) return;
-        revealOne.lock = true;
+    CPLC.state.expandedVisible = Math.min(
+      turns.length,
+      CPLC.state.expandedVisible + CPLC.state.settings.step,
+    )
 
-        const turns = CPLC.dom.getTurnElements();
-        if (CPLC.state.expandedVisible >= turns.length) {
-            revealOne.lock = false;
-            return;
-        }
+    preserveViewport(() => applyVisibility())
 
-        CPLC.state.expandedVisible = Math.min(
-            turns.length,
-            CPLC.state.expandedVisible + CPLC.state.settings.step
-        );
+    CPLC.userCollapse?.enhance?.()
+    CPLC.toolbar?.update?.()
 
-        preserveViewport(() => applyVisibility());
+    requestAnimationFrame(() => {
+      revealOne.lock = false
+    })
+  }
 
-        CPLC.userCollapse?.enhance?.();
-        CPLC.toolbar?.update?.();
+  function hideOne() {
+    if (CPLC.state.expandedVisible <= CPLC.state.settings.initialVisible) return
 
-        requestAnimationFrame(() => {
-            revealOne.lock = false;
-        });
-    }
+    CPLC.state.expandedVisible = Math.max(
+      CPLC.state.settings.initialVisible,
+      CPLC.state.expandedVisible - CPLC.state.settings.step,
+    )
 
-    function hideOne() {
-        if (CPLC.state.expandedVisible <= CPLC.state.settings.initialVisible) return;
+    preserveViewport(() => applyVisibility())
 
-        CPLC.state.expandedVisible = Math.max(
-            CPLC.state.settings.initialVisible,
-            CPLC.state.expandedVisible - CPLC.state.settings.step
-        );
+    CPLC.userCollapse?.enhance?.()
+    CPLC.toolbar?.update?.()
+  }
 
-        preserveViewport(() => applyVisibility());
-
-        CPLC.userCollapse?.enhance?.();
-        CPLC.toolbar?.update?.();
-    }
-
-    CPLC.visibility = {
-        preserveViewport,
-        applyVisibility,
-        revealOne,
-        hideOne
-    };
-})();
+  CPLC.visibility = {
+    preserveViewport,
+    applyVisibility,
+    revealOne,
+    hideOne,
+  }
+})()

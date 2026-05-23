@@ -1,8 +1,8 @@
 {
   "manifest_version": 3,
   "name": "ChatGPT Performance Long Chats",
-  "version": "1.1.0",
-  "description": "Fix ChatGPT lag in long chats. Auto-collapses old messages and reveals them on scroll up. Improve performance with smarter loading.",
+  "version": "1.1.1",
+  "description": "Fix ChatGPT lag, freezing, and slow scrolling in long chats. Auto-collapse old messages and keep large conversations fast.",
   "permissions": [
     "storage"
   ],

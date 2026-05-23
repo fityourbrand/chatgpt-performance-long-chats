@@ -155,6 +155,16 @@
     )
   }
 
+  function hookExtensionMessages() {
+    if (hookExtensionMessages.done) return
+    hookExtensionMessages.done = true
+
+    chrome.runtime.onMessage.addListener((message) => {
+      if (message?.type !== 'CPLC_TOGGLE_TOOLBAR') return
+      CPLC.toolbar?.toggle?.()
+    })
+  }
+
   function scrollToBottomOnceIfPending() {
     if (!pendingScrollToBottom) return
 
@@ -288,6 +298,7 @@
 
     hookComposerSubmit()
     hookTypingSignals()
+    hookExtensionMessages()
 
     CPLC.toolbar.ensure()
     resetConversationState()

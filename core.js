@@ -24,6 +24,7 @@
     hasContextOverflow: false,
     contextBaselineCount: 0,
     reloadHintShown: false,
+    toolbarOpen: false,
     lastScrollTop: 0,
     ticking: false,
     observer: null,

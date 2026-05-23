@@ -208,6 +208,24 @@
     CPLC.state.ui.stickyTooltipTarget = null
   }
 
+  function applyOpenState() {
+    const toolbarEl = CPLC.state.ui.toolbarEl
+    if (!toolbarEl) return
+
+    toolbarEl.classList.toggle('cplc-toolbar-open', CPLC.state.toolbarOpen)
+
+    if (!CPLC.state.toolbarOpen) {
+      hideTooltip(true)
+    }
+  }
+
+  function toggle() {
+    ensure()
+    CPLC.state.toolbarOpen = !CPLC.state.toolbarOpen
+    applyOpenState()
+    update()
+  }
+
   function clearStickyTooltip() {
     if (!CPLC.state.ui.stickyTooltipTarget) return
     hideTooltip(true)
@@ -301,7 +319,7 @@
 
       const justTriggered = CPLC.state.hasContextOverflow && !CPLC.state.reloadHintShown
 
-      if (justTriggered && !CPLC.isUserTyping?.()) {
+      if (justTriggered && CPLC.state.toolbarOpen && !CPLC.isUserTyping?.()) {
         CPLC.state.reloadHintShown = true
 
         showStickyTooltip(
@@ -399,6 +417,7 @@
 
     CPLC.state.ui.toolbarEl = toolbarEl
     CPLC.state.ui.countEl = countEl
+    applyOpenState()
 
     const settingsBtn = createBtn('settings.svg')
     attachTooltip(settingsBtn)
@@ -549,5 +568,5 @@
     update()
   }
 
-  CPLC.toolbar = { ensure, update, hideTooltip }
+  CPLC.toolbar = { ensure, update, hideTooltip, toggle }
 })()

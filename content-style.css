@@ -61,6 +61,19 @@
   gap: 10px;
 
   user-select: none;
+
+  opacity: 0;
+  pointer-events: none;
+  transform: translateX(8px);
+  transition:
+    opacity 0.16s ease,
+    transform 0.16s ease;
+}
+
+#cplc-toolbar.cplc-toolbar-open {
+  opacity: 1;
+  pointer-events: auto;
+  transform: translateX(0);
 }
 
 /* Message counter */

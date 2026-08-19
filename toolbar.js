@@ -359,17 +359,6 @@
       )
     }
 
-    if (ui.collapseBtn) {
-      ui.collapseBtn.classList.toggle('cplc-btn-active', settings.collapseEnabled)
-      setTooltip(
-        ui.collapseBtn,
-        settings.collapseEnabled ? 'Long message collapse is on' : 'Long message collapse is off',
-        settings.collapseEnabled
-          ? 'Long user messages are collapsed automatically.'
-          : 'Long user messages stay fully expanded.',
-      )
-    }
-
     const showChevrons = !settings.autoScroll
 
     if (ui.upBtn) {
@@ -533,16 +522,6 @@
     })
     CPLC.state.ui.autoBtn = autoBtn
 
-    const collapseBtn = createBtn('eye-off.svg')
-    attachTooltip(collapseBtn)
-    collapseBtn.addEventListener('click', async () => {
-      CPLC.state.settings.collapseEnabled = !CPLC.state.settings.collapseEnabled
-      await CPLC.storage.save()
-      update()
-      CPLC.userCollapse.enhance()
-    })
-    CPLC.state.ui.collapseBtn = collapseBtn
-
     const upBtn = createBtn('chevron-up.svg')
     attachTooltip(upBtn)
     upBtn.addEventListener('click', CPLC.visibility.revealOne)
@@ -560,7 +539,6 @@
       reloadBtn,
       modeBtn,
       autoBtn,
-      collapseBtn,
       upBtn,
       downBtn,
     )

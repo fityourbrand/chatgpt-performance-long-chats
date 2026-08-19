@@ -8,15 +8,11 @@
     loadLimit: 20,
     initialVisible: 5,
     autoScroll: true,
-    collapseEnabled: true,
     settingsOpen: false,
     step: 1,
     topThreshold: 80,
     bottomThreshold: 120,
   }
-
-  CPLC.COLLAPSE_MIN_SCROLL_HEIGHT = 260
-  CPLC.COLLAPSED_MAX_HEIGHT = 220
 
   CPLC.state = {
     settings: { ...CPLC.DEFAULTS },
@@ -37,7 +33,6 @@
       visibleMinusBtn: null,
       toolbarEl: null,
       countEl: null,
-      collapseBtn: null,
       autoBtn: null,
       upBtn: null,
       downBtn: null,

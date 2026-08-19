@@ -51,7 +51,6 @@
 
     preserveViewport(() => applyVisibility())
 
-    CPLC.userCollapse?.enhance?.()
     CPLC.toolbar?.update?.()
 
     requestAnimationFrame(() => {
@@ -69,7 +68,6 @@
 
     preserveViewport(() => applyVisibility())
 
-    CPLC.userCollapse?.enhance?.()
     CPLC.toolbar?.update?.()
   }
 

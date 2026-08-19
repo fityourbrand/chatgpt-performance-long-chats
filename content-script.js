@@ -205,7 +205,6 @@
     CPLC.state.expandedVisible = desiredVisible
 
     CPLC.visibility.applyVisibility()
-    CPLC.userCollapse.enhance()
 
     updateContextOverflowState()
 

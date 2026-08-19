@@ -116,7 +116,6 @@
     CPLC.visibility.applyVisibility()
 
     requestAnimationFrame(() => {
-      CPLC.userCollapse?.enhance?.()
       CPLC.toolbar?.update?.()
     })
   }
